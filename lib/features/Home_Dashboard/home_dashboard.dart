@@ -1,3 +1,9 @@
+import 'package:bolt/features/Activity_Log/activity_log_page.dart';
+import 'package:bolt/features/Free_Run/free_run_page.dart';
+import 'package:bolt/features/Goal_Run/goal_run_page.dart';
+import 'package:bolt/features/Leaderboard/leaderboard_page.dart';
+import 'package:bolt/features/Profile/profile_page.dart';
+import 'package:bolt/features/Stats/stats_page.dart';
 import 'package:flutter/material.dart';
 import 'package:bolt/shared/widgets/run_action_button.dart';
 import 'package:bolt/shared/widgets/weekly_stats_card.dart';
@@ -20,15 +26,21 @@ class HomeDashboard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildHeader(),
-                const SizedBox(height: 16),
-                const WeeklyStatsCard(),
-                const SizedBox(height: 16),
+                _buildHeader(context),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const StatsPage()),
+                  ),
+                  child: const WeeklyStatsCard(),
+                ),
+                const SizedBox(height: 8),
                 const WeeklyGoalCard(),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 _buildStartRunningSection(),
-                const SizedBox(height: 16),
-                _buildActionButtons(),
+                const SizedBox(height: 8),
+                _buildActionButtons(context),
               ],
             ),
           ),
@@ -37,7 +49,7 @@ class HomeDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -62,13 +74,19 @@ class HomeDashboard extends StatelessWidget {
             ),
           ],
         ),
-        CircleAvatar(
-          radius: 28,
-          backgroundColor: Colors.grey[300],
-          child: const Icon(
-            Icons.person,
-            size: 32,
-            color: Colors.grey,
+        InkWell(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ProfilePage()),
+          ),
+          child: CircleAvatar(
+            radius: 28,
+            backgroundColor: Colors.grey[300],
+            child: const Icon(
+              Icons.person,
+              size: 32,
+              color: Colors.grey,
+            ),
           ),
         ),
       ],
@@ -86,8 +104,8 @@ class HomeDashboard extends StatelessWidget {
     );
   }
 
-  Widget _buildActionButtons() {
-    return const Column(
+  Widget _buildActionButtons(BuildContext context) {
+    return Column(
       children: [
         IntrinsicHeight(
           child: Row(
@@ -98,28 +116,52 @@ class HomeDashboard extends StatelessWidget {
                   icon: Icons.directions_run,
                   title: 'Free Run',
                   subtitle: 'No goal Just go',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FreeRunPage(),
+                    ),
+                  ),
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: RunActionButton(
                   icon: Icons.timer_outlined,
                   title: 'Goal Run',
                   subtitle: 'Set Distance of Time',
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const GoalRunPage(),
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 8),
         SecondaryButton(
           icon: Icons.auto_stories_outlined,
           label: 'View Activity log',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ActivityLogPage(),
+            ),
+          ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 8),
         SecondaryButton(
           icon: Icons.leaderboard_outlined,
           label: 'Leaderboard',
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const LeaderboardPage(),
+            ),
+          ),
         ),
       ],
     );

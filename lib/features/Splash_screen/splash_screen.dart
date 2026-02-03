@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:bolt/features/Home_Dashboard/home_dashboard.dart';
+import 'package:bolt/features/Auth/auth_page.dart';
 import 'package:flutter/material.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -11,7 +11,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
@@ -49,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen>
         context,
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (_, __, ___) => const HomeDashboard(),
+          pageBuilder: (_, __, ___) => const AuthPage(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(
               opacity: animation,
@@ -76,7 +75,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A84FF), // match your design
+      backgroundColor: const Color(0xFF0A84FF),
       body: Center(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -85,19 +84,12 @@ class _SplashScreenState extends State<SplashScreen>
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Bolt animation
                 SlideTransition(
                   position: _boltSlideAnimation,
                   child: Image.asset(
-                    'assets/images/thunder.png',
+                    'assets/images/bolt_text.png',
                     height: 90,
                   ),
-                ),
-
-                // Logo text
-                Image.asset(
-                  'assets/images/bolt.png',
-                  height: 70,
                 ),
               ],
             ),
