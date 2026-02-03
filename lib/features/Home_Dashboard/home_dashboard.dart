@@ -21,11 +21,11 @@ class HomeDashboard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeader(),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 const WeeklyStatsCard(),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 const WeeklyGoalCard(),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
                 _buildStartRunningSection(),
                 const SizedBox(height: 16),
                 _buildActionButtons(),
@@ -89,29 +89,27 @@ class HomeDashboard extends StatelessWidget {
   Widget _buildActionButtons() {
     return const Column(
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: RunActionButton(
-                icon: Icons.directions_run,
-                title: 'Free Run',
-                subtitle: 'No goal Just go',
-                titleStyle: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w600, // semibold
-                  color: Colors.white,
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: RunActionButton(
+                  icon: Icons.directions_run,
+                  title: 'Free Run',
+                  subtitle: 'No goal Just go',
                 ),
               ),
-            ),
-            SizedBox(width: 12),
-            Expanded(
-              child: RunActionButton(
-                icon: Icons.timer_outlined,
-                title: 'Goal Run',
-                subtitle: 'Set Distance of Time',
+              SizedBox(width: 12),
+              Expanded(
+                child: RunActionButton(
+                  icon: Icons.timer_outlined,
+                  title: 'Goal Run',
+                  subtitle: 'Set Distance of Time',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         SizedBox(height: 12),
         SecondaryButton(

@@ -34,14 +34,17 @@ class WeeklyStatsCard extends StatelessWidget {
                     label: 'Distance',
                     value: '12.3',
                     unit: 'km',
+                    isCompact: true,
                   ),
                 ),
+                const SizedBox(width: 16),
                 Expanded(
                   child: StatItem(
                     label: 'Rank',
                     value: '5',
                     unit: '',
                     showTrendingUp: true,
+                    isCompact: true,
                   ),
                 ),
               ],
@@ -58,6 +61,7 @@ class WeeklyStatsCard extends StatelessWidget {
                     isCompact: true,
                   ),
                 ),
+                const SizedBox(width: 16),
                 Expanded(
                   flex: 3,
                   child: StatItem(
@@ -69,6 +73,7 @@ class WeeklyStatsCard extends StatelessWidget {
                     isCompact: true,
                   ),
                 ),
+                const SizedBox(width: 16),
                 Expanded(
                   flex: 2,
                   child: StatItem(
@@ -113,6 +118,14 @@ class StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bool isSmallScreen = screenWidth < 370;
+
+    double valueFontSize = isCompact
+        ? (isSmallScreen ? 24 : 32)
+        : (isSmallScreen ? 36 : 48);
+    double unitFontSize = isSmallScreen ? 14 : 24;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -137,71 +150,76 @@ class StatItem extends StatelessWidget {
           ),
           const SizedBox(height: 4),
         ],
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (icon != null) ...[
-              Icon(
-                icon,
-                color: Colors.grey[700],
-                size: isCompact ? 24 : 32,
-              ),
-            ],
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 48,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF2196F3), // Blue color
-                height: 1.0,
-              ),
-            ),
-            if (unit.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(left: 2, bottom: 4),
-                child: Text(
-                  unit,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[700],
-                  ),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              if (icon != null) ...[
+                Icon(
+                  icon,
+                  color: Colors.grey[700],
+                  size: isCompact ? 24 : 32,
                 ),
-              ),
-            if (secondaryValue != null) ...[
-              const SizedBox(width: 4),
+                const SizedBox(width: 4),
+              ],
               Text(
-                secondaryValue!,
+                value,
                 style: TextStyle(
-                  fontSize: 48,
+                  fontSize: valueFontSize,
                   fontWeight: FontWeight.w600,
-                  color: const Color(0xFF2196F3),
+                  color: const Color(0xFF2196F3), // Blue color
                   height: 1.0,
                 ),
               ),
-              if (secondaryUnit != null && secondaryUnit!.isNotEmpty)
+              if (unit.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.only(left: 2, bottom: 4),
+                  padding: const EdgeInsets.only(left: 2),
                   child: Text(
-                    secondaryUnit!,
+                    unit,
                     style: TextStyle(
-                      fontSize: 24,
+                      fontSize: unitFontSize,
                       fontWeight: FontWeight.w600,
                       color: Colors.grey[700],
                     ),
                   ),
                 ),
-            ],
-            if (showTrendingUp)
-              Padding(
-                padding: const EdgeInsets.only(left: 8, bottom: 8),
-                child: Icon(
-                  Icons.trending_up,
-                  color: Colors.grey[600],
-                  size: 32,
+              if (secondaryValue != null) ...[
+                const SizedBox(width: 4),
+                Text(
+                  secondaryValue!,
+                  style: TextStyle(
+                    fontSize: valueFontSize,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF2196F3),
+                    height: 1.0,
+                  ),
                 ),
-              ),
-          ],
+                if (secondaryUnit != null && secondaryUnit!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(left: 2),
+                    child: Text(
+                      secondaryUnit!,
+                      style: TextStyle(
+                        fontSize: unitFontSize,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ),
+              ],
+              if (showTrendingUp)
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Icon(
+                    Icons.trending_up,
+                    color: Colors.grey[600],
+                    size: 32,
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );
