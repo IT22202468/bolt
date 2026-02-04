@@ -72,7 +72,7 @@ class _AuthPageState extends State<AuthPage> {
     return Align(
       alignment: Alignment.centerLeft,
       child: Image.asset(
-        'assets/images/bolt_text.png', // Assuming this is the correct white logo
+        'assets/images/bolt_logo.png', // Assuming this is the correct white logo
         height: 40,
         color: Colors.white,
       ),
@@ -180,11 +180,12 @@ class _AuthPageState extends State<AuthPage> {
     return ElevatedButton(
       onPressed: _isSignUpSelected ? () {} : _handleSignIn,
       style: ElevatedButton.styleFrom(
-        foregroundColor: const Color(0xFF0A84FF),
-        backgroundColor: Colors.white.withOpacity(0.8),
+        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF57A3FF),
         minimumSize: const Size(double.infinity, 50),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Colors.white, width: 1.5),
         ),
       ),
       child: Text(

@@ -87,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen>
                 SlideTransition(
                   position: _boltSlideAnimation,
                   child: Image.asset(
-                    'assets/images/bolt_text.png',
+                    'assets/images/bolt_logo.png',
                     height: 90,
                   ),
                 ),
