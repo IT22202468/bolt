@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:bolt/features/Goal_Run/active_run_page.dart';
 import 'package:flutter/material.dart';
 
 class GoalRunPage extends StatefulWidget {
@@ -48,7 +49,11 @@ class _GoalRunPageState extends State<GoalRunPage>
         _animationController.forward(from: 0);
       } else {
         timer.cancel();
-        // TODO: Navigate to the actual run tracking screen
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => ActiveGoalRunPage(isDistanceGoal: _isDistanceSelected),
+          ),
+        );
       }
     });
   }
