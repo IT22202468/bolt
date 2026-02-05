@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:bolt/features/Active_Run/active_run_page.dart';
 import 'package:flutter/material.dart';
 
 class FreeRunPage extends StatefulWidget {
@@ -46,7 +47,10 @@ class _FreeRunPageState extends State<FreeRunPage>
         _animationController.forward(from: 0);
       } else {
         timer.cancel();
-        // TODO: Navigate to the actual run tracking screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const ActiveRunPage()),
+        );
       }
     });
   }
