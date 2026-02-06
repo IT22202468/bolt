@@ -1,5 +1,7 @@
 import 'package:bolt/features/Home_Dashboard/home_dashboard.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -12,6 +14,51 @@ class _AuthPageState extends State<AuthPage> {
   bool _isSignUpSelected = true;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() => _isLoading = true);
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) {
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      if (!mounted) return;
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeDashboard()),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message ?? 'Sign in failed')),
+      );
+      setState(() => _isLoading = false);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+      setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   void _handleSignIn() {
     if (_emailController.text == 'ni@gmail.com' &&
@@ -218,9 +265,15 @@ class _AuthPageState extends State<AuthPage> {
 
   Widget _buildGoogleButton() {
     return ElevatedButton.icon(
-      onPressed: () {},
-      icon: Image.asset('assets/images/google_logo.png', height: 24),
-      label: const Text('Continue with Google'),
+      onPressed: _isLoading ? null : _handleGoogleSignIn,
+      icon: _isLoading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Image.asset('assets/images/google_logo.png', height: 24),
+      label: Text(_isLoading ? 'Signing in...' : 'Continue with Google'),
       style: ElevatedButton.styleFrom(
         foregroundColor: Colors.black,
         backgroundColor: Colors.white,
