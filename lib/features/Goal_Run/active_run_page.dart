@@ -12,6 +12,8 @@ class ActiveGoalRunPage extends StatefulWidget {
 
 class _ActiveGoalRunPageState extends State<ActiveGoalRunPage> {
   late Timer _timer;
+  Timer? _holdToStopTimer;
+  bool _isHoldingStop = false;
   int _secondsElapsed = 0;
   bool _isPaused = false;
   OverlayEntry? _overlayEntry;
@@ -71,9 +73,25 @@ class _ActiveGoalRunPageState extends State<ActiveGoalRunPage> {
     }
   }
 
+  void _startHoldToStop() {
+    _isHoldingStop = true;
+    _holdToStopTimer?.cancel();
+    _holdToStopTimer = Timer(const Duration(seconds: 3), () {
+      if (_isHoldingStop) {
+        _stopRun();
+      }
+    });
+  }
+
+  void _cancelHoldToStop() {
+    _isHoldingStop = false;
+    _holdToStopTimer?.cancel();
+  }
+
   @override
   void dispose() {
     _timer.cancel();
+    _holdToStopTimer?.cancel();
     _overlayEntry?.remove();
     super.dispose();
   }
@@ -195,7 +213,9 @@ class _ActiveGoalRunPageState extends State<ActiveGoalRunPage> {
 
   Widget _buildControls() {
     Widget stopButton = _buildControlButton(
-      onTap: _stopRun,
+      onTap: () {}, // tap does nothing
+      onHoldStart: _startHoldToStop,
+      onHoldEnd: _cancelHoldToStop,
       isPrimary: !_isPaused,
       icon: Icons.stop,
     );
@@ -212,10 +232,17 @@ class _ActiveGoalRunPageState extends State<ActiveGoalRunPage> {
     );
   }
 
-  Widget _buildControlButton(
-      {required VoidCallback onTap, required bool isPrimary, required IconData icon}) {
+  Widget _buildControlButton({
+    required VoidCallback onTap,
+    VoidCallback? onHoldStart,
+    VoidCallback? onHoldEnd,
+    required bool isPrimary,
+    required IconData icon,
+  }) {
     return GestureDetector(
       onTap: onTap,
+      onLongPressStart: (_) => onHoldStart?.call(),
+      onLongPressEnd: (_) => onHoldEnd?.call(),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(

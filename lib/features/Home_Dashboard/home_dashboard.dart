@@ -9,11 +9,19 @@ import 'package:bolt/shared/widgets/run_action_button.dart';
 import 'package:bolt/shared/widgets/weekly_stats_card.dart';
 import 'package:bolt/shared/widgets/weekly_goal_card.dart';
 import 'package:bolt/shared/widgets/secondary_button.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 /// Home Dashboard Screen
 /// Displays user's weekly running statistics and provides quick actions
 class HomeDashboard extends StatelessWidget {
   const HomeDashboard({super.key});
+
+  String _timeBasedGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good Morning!';
+    if (hour < 17) return 'Good Afternoon!';
+    return 'Good Evening!';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +58,10 @@ class HomeDashboard extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final displayName = user?.displayName ?? 'Runner';
+    final photoUrl = user?.photoURL;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -57,15 +69,15 @@ class HomeDashboard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Good Morning!',
+              _timeBasedGreeting(),
               style: TextStyle(
                 fontSize: 20,
                 color: Colors.black,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const Text(
-              'John',
+            Text(
+              displayName,
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.w400,
@@ -82,11 +94,14 @@ class HomeDashboard extends StatelessWidget {
           child: CircleAvatar(
             radius: 28,
             backgroundColor: Colors.grey[300],
-            child: const Icon(
-              Icons.person,
-              size: 32,
-              color: Colors.grey,
-            ),
+            backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+            child: photoUrl == null
+                ? const Icon(
+                    Icons.person,
+                    size: 32,
+                    color: Colors.grey,
+                  )
+                : null,
           ),
         ),
       ],
