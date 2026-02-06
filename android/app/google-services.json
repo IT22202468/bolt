@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "767232163712",
+    "project_id": "bolt-running-app",
+    "storage_bucket": "bolt-running-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:767232163712:android:585be52e28bf5478470b65",
+        "android_client_info": {
+          "package_name": "com.example.bolt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAP0JIGlZYIeC4UnCe2fgVwbSVaF_fyRF4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
