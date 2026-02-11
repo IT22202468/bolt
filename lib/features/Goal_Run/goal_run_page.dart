@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bolt/features/Goal_Run/active_run_page.dart';
+import 'package:bolt/shared/widgets/osm_map_view.dart';
 import 'package:flutter/material.dart';
 
 class GoalRunPage extends StatefulWidget {
@@ -80,13 +81,7 @@ class _GoalRunPageState extends State<GoalRunPage>
     return Scaffold(
       body: Stack(
         children: [
-          // Map Placeholder
-          Container(
-            color: Colors.grey[300],
-            child: const Center(
-              child: Icon(Icons.map_outlined, size: 100, color: Colors.grey),
-            ),
-          ),
+          const OsmMapView(),
 
           // Bottom Sheet Card
           Align(

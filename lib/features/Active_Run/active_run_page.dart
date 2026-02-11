@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bolt/shared/widgets/app_notification.dart';
+import 'package:bolt/shared/widgets/osm_map_view.dart';
 import 'package:flutter/material.dart';
 
 class ActiveRunPage extends StatefulWidget {
@@ -10,21 +11,20 @@ class ActiveRunPage extends StatefulWidget {
 }
 
 class _ActiveRunPageState extends State<ActiveRunPage> {
-  late Timer _timer;
+  
   Timer? _holdToStopTimer;
   bool _isHoldingStop = false;
-  int _secondsElapsed = 0;
+  final int _secondsElapsed = 12;
   bool _isPaused = false;
   OverlayEntry? _overlayEntry;
 
-  // Dummy data that would be updated by a location service
-  double _distance = 0.01;
-  double _pace = 10.0;
+  // Static values until live tracking is wired in.
+  final double _distance = 2.5;
+  final double _pace = 9.8;
 
   @override
   void initState() {
     super.initState();
-    _startTimer();
     WidgetsBinding.instance.addPostFrameCallback((_) => _showNotification());
   }
 
@@ -45,19 +45,6 @@ class _ActiveRunPageState extends State<ActiveRunPage> {
     });
   }
 
-  void _startTimer() {
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!_isPaused) {
-        setState(() {
-          _secondsElapsed++;
-          // Simulate distance and pace changes
-          _distance += 0.001;
-          _pace = 9.5 + (_secondsElapsed % 10) / 10;
-        });
-      }
-    });
-  }
-
   void _togglePause() {
     setState(() {
       _isPaused = !_isPaused;
@@ -65,7 +52,6 @@ class _ActiveRunPageState extends State<ActiveRunPage> {
   }
 
   void _stopRun() {
-    _timer.cancel();
     _overlayEntry?.remove();
     // TODO: Navigate to a run summary page or back to home
     if (Navigator.canPop(context)) {
@@ -90,7 +76,6 @@ class _ActiveRunPageState extends State<ActiveRunPage> {
 
   @override
   void dispose() {
-    _timer.cancel();
     _holdToStopTimer?.cancel();
     _overlayEntry?.remove();
     super.dispose();
@@ -105,13 +90,7 @@ class _ActiveRunPageState extends State<ActiveRunPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Map Placeholder
-          Container(
-            color: Colors.grey[300],
-            child: const Center(
-              child: Icon(Icons.map_outlined, size: 100, color: Colors.grey),
-            ),
-          ),
+          const OsmMapView(),
           _buildBottomSheet(),
         ],
       ),
