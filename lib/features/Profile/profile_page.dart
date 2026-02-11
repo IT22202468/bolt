@@ -1,6 +1,8 @@
+import 'package:bolt/features/Auth/auth_page.dart';
+import 'package:bolt/shared/widgets/logout_button.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../../shared/widgets/logout_button.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 // --- Data Models for Achievements ---
 
@@ -210,9 +212,7 @@ class ProfilePage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              // TODO: Implement settings navigation
-            },
+            onPressed: () => _showSettingsMenu(context),
           ),
         ],
       ),
@@ -222,14 +222,31 @@ class ProfilePage extends StatelessWidget {
           _buildProfileHeader(),
           const SizedBox(height: 32),
           _buildAchievements(),
-          const SizedBox(height: 32),
-          LogoutButton(
-            onPressed: () {
-              // TODO: Implement logout functionality
-            },
-          ),
         ],
       ),
+    );
+  }
+
+  void _showSettingsMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext bc) {
+        return Container(
+          padding: const EdgeInsets.all(20.0),
+          child: LogoutButton(
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await GoogleSignIn().signOut();
+              await FirebaseAuth.instance.signOut();
+              if (!context.mounted) return;
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const AuthPage()),
+                (route) => false,
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
