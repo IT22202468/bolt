@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "767232163712-s6fp9l1pgtu5ebdfbep1vo504i5fqouj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.bolt",
+            "certificate_hash": "9f142d869e1f4f68769847c9642160f87dcd6e73"
+          }
+        },
+        {
           "client_id": "767232163712-9leg9ltockr5s3s5c82nrdhepmheb3dd.apps.googleusercontent.com",
           "client_type": 3
         }

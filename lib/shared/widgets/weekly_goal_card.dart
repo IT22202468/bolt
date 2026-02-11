@@ -6,7 +6,7 @@ class WeeklyGoalCard extends StatelessWidget {
 
   const WeeklyGoalCard({
     super.key,
-    this.progress = 0.55,
+    this.progress = 1.00,
   });
 
   @override
