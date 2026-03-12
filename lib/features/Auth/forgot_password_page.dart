@@ -192,11 +192,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        foregroundColor: const Color(0xFF0A84FF),
-        backgroundColor: Colors.white,
+        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF57A3FF),
         minimumSize: const Size(double.infinity, 50),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Colors.white, width: 1.5),
         ),
       ),
       child: Text(

@@ -20,7 +20,7 @@ class WeeklyGoalCard extends StatelessWidget {
         side: BorderSide(color: Colors.grey[200]!),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -29,14 +29,14 @@ class WeeklyGoalCard extends StatelessWidget {
                 Icon(
                   Icons.emoji_events_outlined,
                   color: Colors.grey[700],
-                  size: 28,
+                  size: 20,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
                     'Weekly Goal',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Colors.black,
                     ),
@@ -45,14 +45,14 @@ class WeeklyGoalCard extends StatelessWidget {
                 Text(
                   '$progressPercentage%',
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 14,
                     fontWeight: FontWeight.bold,
                     color: Colors.grey[800],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: LinearProgressIndicator(

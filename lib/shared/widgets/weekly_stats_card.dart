@@ -210,8 +210,7 @@ class StatItem extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               if (icon != null) ...[
                 Icon(
@@ -268,11 +267,11 @@ class StatItem extends StatelessWidget {
               ],
               if (showTrendingUp)
                 Padding(
-                  padding: const EdgeInsets.only(left: 8),
+                  padding: const EdgeInsets.only(left: 4),
                   child: Icon(
                     Icons.trending_up,
                     color: Colors.grey[600],
-                    size: 32,
+                    size: isCompact ? 20 : 28,
                   ),
                 ),
             ],

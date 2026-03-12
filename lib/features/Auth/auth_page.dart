@@ -107,9 +107,9 @@ class _AuthPageState extends State<AuthPage> {
                   child: GridView.builder(
                     shrinkWrap: true,
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      mainAxisSpacing: 15,
-                      crossAxisSpacing: 15,
+                      crossAxisCount: 5,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
                     ),
                     itemCount: _presetAvatars.length,
                     itemBuilder: (context, index) {
@@ -278,8 +278,8 @@ class _AuthPageState extends State<AuthPage> {
           GestureDetector(
             onTap: _showAvatarPicker,
             child: Container(
-              width: 100,
-              height: 100,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
@@ -295,8 +295,8 @@ class _AuthPageState extends State<AuthPage> {
               child: ClipOval(
                 child: AvatarPlus(
                   _selectedAvatarName,
-                  width: 100,
-                  height: 100,
+                  width: 80,
+                  height: 80,
                 ),
               ),
             ),
