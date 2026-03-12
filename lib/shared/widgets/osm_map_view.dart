@@ -8,10 +8,18 @@ class OsmMapView extends StatefulWidget {
     super.key,
     this.initialZoom = 15,
     this.fallbackCenter = const LatLng(37.7749, -122.4194),
+    this.centerOverride,
+    this.polylinePoints,
+    this.enableLocationTracking = true,
+    this.followUser = true,
   });
 
   final double initialZoom;
   final LatLng fallbackCenter;
+  final LatLng? centerOverride;
+  final List<LatLng>? polylinePoints;
+  final bool enableLocationTracking;
+  final bool followUser;
 
   @override
   State<OsmMapView> createState() => _OsmMapViewState();
@@ -21,11 +29,29 @@ class _OsmMapViewState extends State<OsmMapView> {
   final MapController _mapController = MapController();
   LatLng? _center;
   String? _statusMessage;
+  bool _userPanning = false;
 
   @override
   void initState() {
     super.initState();
-    _loadLocation();
+    if (widget.enableLocationTracking) {
+      _loadLocation();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant OsmMapView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_userPanning) return;
+    final override = widget.centerOverride;
+    if (override != null && override != oldWidget.centerOverride) {
+      _mapController.move(override, widget.initialZoom);
+    } else if (widget.followUser && widget.polylinePoints != null) {
+      final points = widget.polylinePoints!;
+      if (points.isNotEmpty) {
+        _mapController.move(points.last, widget.initialZoom);
+      }
+    }
   }
 
   Future<void> _loadLocation() async {
@@ -71,9 +97,23 @@ class _OsmMapViewState extends State<OsmMapView> {
     _mapController.move(widget.fallbackCenter, widget.initialZoom);
   }
 
+  void _recenter() {
+    setState(() => _userPanning = false);
+    final override = widget.centerOverride;
+    if (override != null) {
+      _mapController.move(override, widget.initialZoom);
+    } else if (widget.polylinePoints != null &&
+        widget.polylinePoints!.isNotEmpty) {
+      _mapController.move(widget.polylinePoints!.last, widget.initialZoom);
+    } else if (_center != null) {
+      _mapController.move(_center!, widget.initialZoom);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final center = _center ?? widget.fallbackCenter;
+    final center = widget.centerOverride ?? _center ?? widget.fallbackCenter;
+    final polylinePoints = widget.polylinePoints;
 
     return Stack(
       children: [
@@ -85,13 +125,29 @@ class _OsmMapViewState extends State<OsmMapView> {
             interactionOptions: const InteractionOptions(
               flags: InteractiveFlag.all,
             ),
+            onMapEvent: (MapEvent event) {
+              if (event is MapEventMoveStart && !_userPanning) {
+                setState(() => _userPanning = true);
+              }
+            },
           ),
           children: [
             TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+              subdomains: const ['a', 'b', 'c', 'd'],
               userAgentPackageName: 'com.example.bolt',
               maxZoom: 19,
             ),
+            if (polylinePoints != null && polylinePoints.isNotEmpty)
+              PolylineLayer(
+                polylines: [
+                  Polyline(
+                    points: polylinePoints,
+                    strokeWidth: 4,
+                    color: const Color(0xFF0088FF),
+                  ),
+                ],
+              ),
             MarkerLayer(
               markers: [
                 Marker(
@@ -126,6 +182,30 @@ class _OsmMapViewState extends State<OsmMapView> {
                 _statusMessage!,
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 12, color: Colors.black87),
+              ),
+            ),
+          ),
+        if (_userPanning)
+          Positioned(
+            top: 60,
+            right: 16,
+            child: GestureDetector(
+              onTap: _recenter,
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black26, blurRadius: 6),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.my_location,
+                  color: Color(0xFF0088FF),
+                  size: 22,
+                ),
               ),
             ),
           ),

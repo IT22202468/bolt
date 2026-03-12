@@ -65,27 +65,32 @@ class HomeDashboard extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _timeBasedGreeting(),
-              style: TextStyle(
-                fontSize: 20,
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _timeBasedGreeting(),
+                style: const TextStyle(
+                  fontSize: 18,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            Text(
-              displayName,
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w400,
-                color: Colors.grey,
+              Text(
+                displayName,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.grey,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
+        const SizedBox(width: 16),
         InkWell(
           onTap: () => Navigator.push(
             context,

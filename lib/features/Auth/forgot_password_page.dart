@@ -1,0 +1,208 @@
+import 'package:flutter/material.dart';
+
+class ForgotPasswordPage extends StatefulWidget {
+  const ForgotPasswordPage({super.key});
+
+  @override
+  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+}
+
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  final _emailController = TextEditingController();
+  bool _isOtpSent = false;
+  final List<TextEditingController> _otpControllers =
+      List.generate(4, (_) => TextEditingController());
+  final List<FocusNode> _otpFocusNodes = List.generate(4, (_) => FocusNode());
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    for (var controller in _otpControllers) {
+      controller.dispose();
+    }
+    for (var node in _otpFocusNodes) {
+      node.dispose();
+    }
+    super.dispose();
+  }
+
+  void _handleSendOtp() {
+    if (_emailController.text.isNotEmpty) {
+      setState(() {
+        _isOtpSent = true;
+      });
+    }
+  }
+
+  void _handleVerifyOtp() {
+    String otp = _otpControllers.map((e) => e.text).join();
+    if (otp.length == 4) {
+      // Handle OTP verification logic
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('OTP Verified! Password reset link sent.')),
+      );
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A84FF),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 32.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 20),
+              const Text(
+                'Forgot Password',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _isOtpSent
+                    ? 'Enter the 4-digit code sent to your email.'
+                    : 'Enter your email address to receive a verification code.',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 40),
+              if (!_isOtpSent) ...[
+                _buildTextField(
+                  label: 'Email',
+                  hint: 'your@email.com',
+                  controller: _emailController,
+                ),
+                const SizedBox(height: 32),
+                _buildPrimaryButton(
+                  text: 'Send Code',
+                  onPressed: _handleSendOtp,
+                ),
+              ] else ...[
+                _buildOtpFields(),
+                const SizedBox(height: 32),
+                _buildPrimaryButton(
+                  text: 'Verify OTP',
+                  onPressed: _handleVerifyOtp,
+                ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => setState(() => _isOtpSent = false),
+                  child: const Text(
+                    'Resend Code',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required String hint,
+    required TextEditingController controller,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: const BorderSide(color: Colors.white, width: 1.5),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12.0),
+              borderSide: const BorderSide(color: Colors.white, width: 2),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildOtpFields() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: List.generate(
+        4,
+        (index) => SizedBox(
+          width: 60,
+          child: TextField(
+            controller: _otpControllers[index],
+            focusNode: _otpFocusNodes[index],
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            maxLength: 1,
+            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+            decoration: InputDecoration(
+              counterText: '',
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+                borderSide: const BorderSide(color: Colors.white, width: 1.5),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.0),
+                borderSide: const BorderSide(color: Colors.white, width: 2),
+              ),
+            ),
+            onChanged: (value) {
+              if (value.isNotEmpty && index < 3) {
+                _otpFocusNodes[index + 1].requestFocus();
+              } else if (value.isEmpty && index > 0) {
+                _otpFocusNodes[index - 1].requestFocus();
+              }
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPrimaryButton({required String text, required VoidCallback onPressed}) {
+    return ElevatedButton(
+      onPressed: onPressed,
+      style: ElevatedButton.styleFrom(
+        foregroundColor: const Color(0xFF0A84FF),
+        backgroundColor: Colors.white,
+        minimumSize: const Size(double.infinity, 50),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+    );
+  }
+}

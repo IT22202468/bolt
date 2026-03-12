@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:bolt/shared/widgets/app_notification.dart';
 import 'package:bolt/shared/widgets/osm_map_view.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
 
 class ActiveRunPage extends StatefulWidget {
   const ActiveRunPage({super.key});
@@ -11,21 +13,98 @@ class ActiveRunPage extends StatefulWidget {
 }
 
 class _ActiveRunPageState extends State<ActiveRunPage> {
-  
   Timer? _holdToStopTimer;
+  StreamSubscription<Position>? _positionSubscription;
   bool _isHoldingStop = false;
-  final int _secondsElapsed = 12;
+  int _secondsElapsed = 0;
   bool _isPaused = false;
+  bool _isMinimized = false;
   OverlayEntry? _overlayEntry;
 
-  // Static values until live tracking is wired in.
-  final double _distance = 2.5;
-  final double _pace = 9.8;
+  double _distance = 0.0;
+  double _pace = 0.0;
+  final List<LatLng> _routePoints = [];
+  LatLng? _currentCenter;
+  late Timer _elapsedTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _showNotification());
+    _startLocationTracking();
+    _startElapsedTimer();
+  }
+
+  void _startElapsedTimer() {
+    _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!_isPaused) {
+        setState(() {
+          _secondsElapsed++;
+          _updatePace();
+        });
+      }
+    });
+  }
+
+  void _updatePace() {
+    if (_secondsElapsed == 0 || _distance == 0) {
+      _pace = 0.0;
+      return;
+    }
+    final hoursElapsed = _secondsElapsed / 3600.0;
+    _pace = _distance / hoursElapsed;
+  }
+
+  Future<void> _startLocationTracking() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      return;
+    }
+
+    var permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      return;
+    }
+
+    _positionSubscription = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 5,
+      ),
+    ).listen(_onPositionUpdate);
+  }
+
+  void _onPositionUpdate(Position position) {
+    if (_isPaused) return;
+
+    final nextPoint = LatLng(position.latitude, position.longitude);
+    if (_routePoints.isNotEmpty) {
+      final lastPoint = _routePoints.last;
+      final deltaMeters = Geolocator.distanceBetween(
+        lastPoint.latitude,
+        lastPoint.longitude,
+        nextPoint.latitude,
+        nextPoint.longitude,
+      );
+      if (deltaMeters < 5) {
+        return;
+      }
+      setState(() {
+        _distance += deltaMeters / 1000;
+        _routePoints.add(nextPoint);
+        _currentCenter = nextPoint;
+        _updatePace();
+      });
+    } else {
+      setState(() {
+        _routePoints.add(nextPoint);
+        _currentCenter = nextPoint;
+      });
+    }
   }
 
   void _showNotification() {
@@ -77,6 +156,8 @@ class _ActiveRunPageState extends State<ActiveRunPage> {
   @override
   void dispose() {
     _holdToStopTimer?.cancel();
+    _elapsedTimer.cancel();
+    _positionSubscription?.cancel();
     _overlayEntry?.remove();
     super.dispose();
   }
@@ -90,7 +171,11 @@ class _ActiveRunPageState extends State<ActiveRunPage> {
     return Scaffold(
       body: Stack(
         children: [
-          const OsmMapView(),
+          OsmMapView(
+            enableLocationTracking: false,
+            centerOverride: _currentCenter,
+            polylinePoints: _routePoints,
+          ),
           _buildBottomSheet(),
         ],
       ),
@@ -100,8 +185,9 @@ class _ActiveRunPageState extends State<ActiveRunPage> {
   Widget _buildBottomSheet() {
     return Align(
       alignment: Alignment.bottomCenter,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(32, 40, 32, 40),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
@@ -112,14 +198,59 @@ class _ActiveRunPageState extends State<ActiveRunPage> {
             BoxShadow(color: Colors.black12, blurRadius: 15, offset: Offset(0, -4))
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: _isMinimized ? _buildMinimizedStrip() : _buildExpandedSheet(),
+      ),
+    );
+  }
+
+  Widget _buildMinimizedStrip() {
+    return GestureDetector(
+      onTap: () => setState(() => _isMinimized = false),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        child: Row(
           children: [
-            _buildStats(),
-            const SizedBox(height: 20),
-            _buildControls(),
+            const Icon(Icons.drag_handle, color: Colors.black38, size: 20),
+            const SizedBox(width: 12),
+            Text(
+              '${_distance.toStringAsFixed(2)} km',
+              style: const TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF0088FF)),
+            ),
+            const Spacer(),
+            Text(
+              '${_formatTime()} mins',
+              style: const TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF0088FF)),
+            ),
+            const SizedBox(width: 12),
+            const Icon(Icons.expand_less, color: Color(0xFF0088FF), size: 24),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildExpandedSheet() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(32, 16, 32, 40),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: IconButton(
+              icon: const Icon(Icons.expand_more, color: Colors.black54),
+              onPressed: () => setState(() => _isMinimized = true),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          _buildStats(),
+          const SizedBox(height: 20),
+          _buildControls(),
+        ],
       ),
     );
   }

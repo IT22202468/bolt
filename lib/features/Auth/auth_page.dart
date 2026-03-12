@@ -1,7 +1,10 @@
 import 'package:bolt/features/Home_Dashboard/home_dashboard.dart';
+import 'package:bolt/features/Auth/forgot_password_page.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:avatar_plus/avatar_plus.dart';
+import 'dart:math';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -15,6 +18,9 @@ class _AuthPageState extends State<AuthPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  String _selectedAvatarName = 'BoltUser_${Random().nextInt(1000)}';
+
+  final List<String> _presetAvatars = List.generate(20, (index) => 'Avatar_$index');
 
   Future<void> _handleGoogleSignIn() async {
     setState(() => _isLoading = true);
@@ -61,7 +67,7 @@ class _AuthPageState extends State<AuthPage> {
   }
 
   void _handleSignIn() {
-    if (_emailController.text == 'ni@gmail.com' &&
+    if (_emailController.text == 'n@gmail.com' &&
         _passwordController.text == 'asdf123') {
       Navigator.pushReplacement(
         context,
@@ -72,6 +78,77 @@ class _AuthPageState extends State<AuthPage> {
         const SnackBar(content: Text('Invalid credentials')),
       );
     }
+  }
+
+  void _showAvatarPicker() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.75,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Select an Avatar',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                Flexible(
+                  child: GridView.builder(
+                    shrinkWrap: true,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 15,
+                      crossAxisSpacing: 15,
+                    ),
+                    itemCount: _presetAvatars.length,
+                    itemBuilder: (context, index) {
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() => _selectedAvatarName = _presetAvatars[index]);
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: _selectedAvatarName == _presetAvatars[index]
+                                  ? const Color(0xFF0A84FF)
+                                  : Colors.grey.shade300,
+                              width: 2,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: AvatarPlus(_presetAvatars[index]),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() => _selectedAvatarName = 'BoltUser_${Random().nextInt(10000)}');
+                    Navigator.pop(context);
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Generate Random Avatar'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -89,6 +166,10 @@ class _AuthPageState extends State<AuthPage> {
               const SizedBox(height: 40),
               _buildAuthModeSelector(),
               const SizedBox(height: 32),
+              if (_isSignUpSelected) ...[
+                _buildAvatarSelection(),
+                const SizedBox(height: 32),
+              ],
               _buildTextField(
                   label: 'Email',
                   hint: 'your@email.com',
@@ -99,6 +180,7 @@ class _AuthPageState extends State<AuthPage> {
                   hint: '********',
                   obscureText: true,
                   controller: _passwordController),
+              if (!_isSignUpSelected) _buildForgotPasswordLink(),
               const SizedBox(height: 32),
               _buildPrimaryButton(),
               const SizedBox(height: 16),
@@ -119,7 +201,7 @@ class _AuthPageState extends State<AuthPage> {
     return Align(
       alignment: Alignment.centerLeft,
       child: Image.asset(
-        'assets/images/bolt_logo.png', // Assuming this is the correct white logo
+        'assets/images/bolt_logo.png',
         height: 40,
         color: Colors.white,
       ),
@@ -185,6 +267,78 @@ class _AuthPageState extends State<AuthPage> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAvatarSelection() {
+    return Center(
+      child: Stack(
+        children: [
+          GestureDetector(
+            onTap: _showAvatarPicker,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: AvatarPlus(
+                  _selectedAvatarName,
+                  width: 100,
+                  height: 100,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: GestureDetector(
+              onTap: _showAvatarPicker,
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF57A3FF),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.edit,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildForgotPasswordLink() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+          );
+        },
+        child: Text(
+          'Forgot Password?',
+          style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14),
+        ),
       ),
     );
   }
@@ -270,7 +424,7 @@ class _AuthPageState extends State<AuthPage> {
           ? const SizedBox(
               width: 24,
               height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
+              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0A84FF)),
             )
           : Image.asset('assets/images/google_logo.png', height: 24),
       label: Text(_isLoading ? 'Signing in...' : 'Continue with Google'),
