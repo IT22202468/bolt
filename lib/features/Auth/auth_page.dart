@@ -1,8 +1,9 @@
 import 'package:bolt/features/Home_Dashboard/home_dashboard.dart';
 import 'package:bolt/features/Auth/forgot_password_page.dart';
+import 'package:bolt/features/Auth/presentation/cubit/auth_cubit.dart';
+import 'package:bolt/features/Auth/presentation/cubit/auth_state.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:avatar_plus/avatar_plus.dart';
 import 'dart:math';
 
@@ -17,47 +18,9 @@ class _AuthPageState extends State<AuthPage> {
   bool _isSignUpSelected = true;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
   String _selectedAvatarName = 'BoltUser_${Random().nextInt(1000)}';
 
   final List<String> _presetAvatars = List.generate(20, (index) => 'Avatar_$index');
-
-  Future<void> _handleGoogleSignIn() async {
-    setState(() => _isLoading = true);
-    try {
-      final googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) {
-        setState(() => _isLoading = false);
-        return;
-      }
-
-      final googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      await FirebaseAuth.instance.signInWithCredential(credential);
-
-      if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeDashboard()),
-      );
-    } on FirebaseAuthException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message ?? 'Sign in failed')),
-      );
-      setState(() => _isLoading = false);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-      setState(() => _isLoading = false);
-    }
-  }
 
   @override
   void dispose() {
@@ -67,17 +30,22 @@ class _AuthPageState extends State<AuthPage> {
   }
 
   void _handleSignIn() {
-    if (_emailController.text == 'n@gmail.com' &&
-        _passwordController.text == 'asdf123') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeDashboard()),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid credentials')),
-      );
-    }
+    context.read<AuthCubit>().login(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
+  }
+
+  void _handleSignUp() {
+    context.read<AuthCubit>().register(
+          _emailController.text.trim(),
+          _passwordController.text,
+          _selectedAvatarName,
+        );
+  }
+
+  void _handleGoogleSignIn() {
+    context.read<AuthCubit>().googleSignIn();
   }
 
   void _showAvatarPicker() {
@@ -153,47 +121,64 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A84FF),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 60),
-              _buildLogo(),
-              const SizedBox(height: 40),
-              _buildAuthModeSelector(),
-              const SizedBox(height: 32),
-              if (_isSignUpSelected) ...[
-                _buildAvatarSelection(),
-                const SizedBox(height: 32),
-              ],
-              _buildTextField(
-                  label: 'Email',
-                  hint: 'your@email.com',
-                  controller: _emailController),
-              const SizedBox(height: 24),
-              _buildTextField(
-                  label: 'Password',
-                  hint: '********',
-                  obscureText: true,
-                  controller: _passwordController),
-              if (!_isSignUpSelected) _buildForgotPasswordLink(),
-              const SizedBox(height: 32),
-              _buildPrimaryButton(),
-              const SizedBox(height: 16),
-              _buildTermsText(),
-              const SizedBox(height: 24),
-              _buildDivider(),
-              const SizedBox(height: 24),
-              _buildGoogleButton(),
-              const SizedBox(height: 40),
-            ],
+    return BlocConsumer<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is AuthAuthenticated) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomeDashboard()),
+          );
+        } else if (state is AuthError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.message)),
+          );
+        }
+      },
+      builder: (context, state) {
+        final isLoading = state is AuthLoading;
+        return Scaffold(
+          backgroundColor: const Color(0xFF0A84FF),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 32),
+                  _buildLogo(),
+                  const SizedBox(height: 24),
+                  _buildAuthModeSelector(),
+                  const SizedBox(height: 20),
+                  if (_isSignUpSelected) ...[
+                    _buildAvatarSelection(),
+                    const SizedBox(height: 20),
+                  ],
+                  _buildTextField(
+                      label: 'Email',
+                      hint: 'your@email.com',
+                      controller: _emailController),
+                  const SizedBox(height: 16),
+                  _buildTextField(
+                      label: 'Password',
+                      hint: '********',
+                      obscureText: true,
+                      controller: _passwordController),
+                  if (!_isSignUpSelected) _buildForgotPasswordLink(),
+                  const SizedBox(height: 20),
+                  _buildPrimaryButton(isLoading: isLoading),
+                  const SizedBox(height: 10),
+                  _buildTermsText(),
+                  const SizedBox(height: 16),
+                  _buildDivider(),
+                  const SizedBox(height: 16),
+                  _buildGoogleButton(isLoading: isLoading),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -377,9 +362,11 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 
-  Widget _buildPrimaryButton() {
+  Widget _buildPrimaryButton({required bool isLoading}) {
     return ElevatedButton(
-      onPressed: _isSignUpSelected ? () {} : _handleSignIn,
+      onPressed: isLoading
+          ? null
+          : (_isSignUpSelected ? _handleSignUp : _handleSignIn),
       style: ElevatedButton.styleFrom(
         foregroundColor: Colors.white,
         backgroundColor: const Color(0xFF57A3FF),
@@ -389,10 +376,16 @@ class _AuthPageState extends State<AuthPage> {
           side: const BorderSide(color: Colors.white, width: 1.5),
         ),
       ),
-      child: Text(
-        _isSignUpSelected ? 'Create Account' : 'Sign In',
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
+      child: isLoading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            )
+          : Text(
+              _isSignUpSelected ? 'Create Account' : 'Sign In',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
     );
   }
 
@@ -417,17 +410,17 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 
-  Widget _buildGoogleButton() {
+  Widget _buildGoogleButton({required bool isLoading}) {
     return ElevatedButton.icon(
-      onPressed: _isLoading ? null : _handleGoogleSignIn,
-      icon: _isLoading
+      onPressed: isLoading ? null : _handleGoogleSignIn,
+      icon: isLoading
           ? const SizedBox(
               width: 24,
               height: 24,
               child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0A84FF)),
             )
           : Image.asset('assets/images/google_logo.png', height: 24),
-      label: Text(_isLoading ? 'Signing in...' : 'Continue with Google'),
+      label: Text(isLoading ? 'Signing in...' : 'Continue with Google'),
       style: ElevatedButton.styleFrom(
         foregroundColor: Colors.black,
         backgroundColor: Colors.white,

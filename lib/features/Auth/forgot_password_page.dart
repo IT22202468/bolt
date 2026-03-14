@@ -1,4 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import '../../core/constants/api_constants.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -10,6 +13,7 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _emailController = TextEditingController();
   bool _isOtpSent = false;
+  bool _isLoading = false;
   final List<TextEditingController> _otpControllers =
       List.generate(4, (_) => TextEditingController());
   final List<FocusNode> _otpFocusNodes = List.generate(4, (_) => FocusNode());
@@ -26,22 +30,54 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     super.dispose();
   }
 
-  void _handleSendOtp() {
-    if (_emailController.text.isNotEmpty) {
+  Future<void> _handleSendOtp() async {
+    if (_emailController.text.isEmpty) return;
+    setState(() => _isLoading = true);
+    try {
+      await http.post(
+        Uri.parse('${ApiConstants.baseUrl}${ApiConstants.forgotPassword}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': _emailController.text.trim()}),
+      );
+      if (!mounted) return;
       setState(() {
         _isOtpSent = true;
+        _isLoading = false;
       });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to send code. Try again.')),
+      );
     }
   }
 
-  void _handleVerifyOtp() {
-    String otp = _otpControllers.map((e) => e.text).join();
-    if (otp.length == 4) {
-      // Handle OTP verification logic
+  Future<void> _handleVerifyOtp() async {
+    final otp = _otpControllers.map((e) => e.text).join();
+    if (otp.length < 4) return;
+    setState(() => _isLoading = true);
+    try {
+      await http.post(
+        Uri.parse('${ApiConstants.baseUrl}${ApiConstants.verifyOtp}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': _emailController.text.trim(),
+          'otp': otp,
+        }),
+      );
+      if (!mounted) return;
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('OTP Verified! Password reset link sent.')),
       );
       Navigator.pop(context);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Verification failed. Try again.')),
+      );
     }
   }
 
@@ -92,18 +128,20 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 const SizedBox(height: 32),
                 _buildPrimaryButton(
                   text: 'Send Code',
-                  onPressed: _handleSendOtp,
+                  onPressed: _isLoading ? null : _handleSendOtp,
                 ),
               ] else ...[
                 _buildOtpFields(),
                 const SizedBox(height: 32),
                 _buildPrimaryButton(
                   text: 'Verify OTP',
-                  onPressed: _handleVerifyOtp,
+                  onPressed: _isLoading ? null : _handleVerifyOtp,
                 ),
                 const SizedBox(height: 16),
                 TextButton(
-                  onPressed: () => setState(() => _isOtpSent = false),
+                  onPressed: _isLoading
+                      ? null
+                      : () => setState(() => _isOtpSent = false),
                   child: const Text(
                     'Resend Code',
                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -188,7 +226,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     );
   }
 
-  Widget _buildPrimaryButton({required String text, required VoidCallback onPressed}) {
+  Widget _buildPrimaryButton(
+      {required String text, required VoidCallback? onPressed}) {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
@@ -200,10 +239,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           side: const BorderSide(color: Colors.white, width: 1.5),
         ),
       ),
-      child: Text(
-        text,
-        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
+      child: _isLoading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            )
+          : Text(
+              text,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
     );
   }
 }

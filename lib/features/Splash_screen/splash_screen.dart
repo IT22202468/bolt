@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'package:bolt/features/Auth/auth_page.dart';
+import 'package:bolt/features/Auth/presentation/cubit/auth_cubit.dart';
+import 'package:bolt/features/Auth/presentation/cubit/auth_state.dart';
+import 'package:bolt/features/Home_Dashboard/home_dashboard.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -42,13 +46,18 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    // Navigate to next screen
+    context.read<AuthCubit>().checkAuthStatus();
+
     Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      final authState = context.read<AuthCubit>().state;
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 600),
-          pageBuilder: (_, __, ___) => const AuthPage(),
+          pageBuilder: (_, __, ___) => authState is AuthAuthenticated
+              ? const HomeDashboard()
+              : const AuthPage(),
           transitionsBuilder: (_, animation, __, child) {
             return FadeTransition(
               opacity: animation,
