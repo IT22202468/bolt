@@ -1,8 +1,9 @@
 import 'package:bolt/features/Auth/auth_page.dart';
+import 'package:bolt/features/Auth/presentation/cubit/auth_cubit.dart';
+import 'package:bolt/features/Auth/presentation/cubit/auth_state.dart';
 import 'package:bolt/shared/widgets/logout_button.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 // --- Data Models for Achievements ---
 
@@ -236,8 +237,7 @@ class ProfilePage extends StatelessWidget {
           child: LogoutButton(
             onPressed: () async {
               Navigator.of(context).pop();
-              await GoogleSignIn().signOut();
-              await FirebaseAuth.instance.signOut();
+              await context.read<AuthCubit>().logout();
               if (!context.mounted) return;
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute(builder: (_) => const AuthPage()),
@@ -251,24 +251,25 @@ class ProfilePage extends StatelessWidget {
   }
 
   Widget _buildProfileHeader() {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName = user?.displayName ?? 'Runner';
-    final photoUrl = user?.photoURL;
-    final username = user?.email?.split('@').first ?? 'runner';
+    return Builder(builder: (context) {
+      final authState = context.watch<AuthCubit>().state;
+      final displayName = authState is AuthAuthenticated ? authState.user.displayName : 'Runner';
+      final photoUrl = authState is AuthAuthenticated ? authState.user.photoUrl : null;
+      final username = displayName.toLowerCase().replaceAll(' ', '_');
 
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 50,
-          backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-          child: photoUrl == null
-              ? const Icon(
-                  Icons.person,
-                  size: 50,
-                  color: Colors.grey,
-                )
-              : null,
-        ),
+      return Column(
+        children: [
+          CircleAvatar(
+            radius: 50,
+            backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
+            child: photoUrl == null
+                ? const Icon(
+                    Icons.person,
+                    size: 50,
+                    color: Colors.grey,
+                  )
+                : null,
+          ),
         const SizedBox(height: 16),
         Text(
           displayName,
@@ -287,6 +288,7 @@ class ProfilePage extends StatelessWidget {
         ),
       ],
     );
+    });
   }
 
   Color _badgeTierColor(String tier) {

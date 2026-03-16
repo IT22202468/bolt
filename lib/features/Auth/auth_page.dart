@@ -44,10 +44,6 @@ class _AuthPageState extends State<AuthPage> {
         );
   }
 
-  void _handleGoogleSignIn() {
-    context.read<AuthCubit>().googleSignIn();
-  }
-
   void _showAvatarPicker() {
     showModalBottomSheet(
       context: context,
@@ -168,10 +164,6 @@ class _AuthPageState extends State<AuthPage> {
                   _buildPrimaryButton(isLoading: isLoading),
                   const SizedBox(height: 10),
                   _buildTermsText(),
-                  const SizedBox(height: 16),
-                  _buildDivider(),
-                  const SizedBox(height: 16),
-                  _buildGoogleButton(isLoading: isLoading),
                   const SizedBox(height: 24),
                 ],
               ),
@@ -397,39 +389,4 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 
-  Widget _buildDivider() {
-    return Row(
-      children: [
-        const Expanded(child: Divider(color: Colors.white54)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Text('or', style: TextStyle(color: Colors.white.withOpacity(0.8))),
-        ),
-        const Expanded(child: Divider(color: Colors.white54)),
-      ],
-    );
-  }
-
-  Widget _buildGoogleButton({required bool isLoading}) {
-    return ElevatedButton.icon(
-      onPressed: isLoading ? null : _handleGoogleSignIn,
-      icon: isLoading
-          ? const SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0A84FF)),
-            )
-          : Image.asset('assets/images/google_logo.png', height: 24),
-      label: Text(isLoading ? 'Signing in...' : 'Continue with Google'),
-      style: ElevatedButton.styleFrom(
-        foregroundColor: Colors.black,
-        backgroundColor: Colors.white,
-        minimumSize: const Size(double.infinity, 50),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
 }

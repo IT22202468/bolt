@@ -8,8 +8,10 @@ import 'package:flutter/material.dart';
 import 'package:bolt/shared/widgets/run_action_button.dart';
 import 'package:bolt/shared/widgets/weekly_stats_card.dart';
 import 'package:bolt/shared/widgets/weekly_goal_card.dart';
+import 'package:bolt/features/Auth/presentation/cubit/auth_cubit.dart';
+import 'package:bolt/features/Auth/presentation/cubit/auth_state.dart';
 import 'package:bolt/shared/widgets/secondary_button.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 /// Home Dashboard Screen
 /// Displays user's weekly running statistics and provides quick actions
@@ -58,9 +60,9 @@ class HomeDashboard extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    final displayName = user?.displayName ?? 'Runner';
-    final photoUrl = user?.photoURL;
+    final authState = context.watch<AuthCubit>().state;
+    final displayName = authState is AuthAuthenticated ? authState.user.displayName : 'Runner';
+    final photoUrl = authState is AuthAuthenticated ? authState.user.photoUrl : null;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,

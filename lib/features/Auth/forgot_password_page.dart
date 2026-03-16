@@ -1,7 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import '../../core/constants/api_constants.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -32,53 +29,15 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   Future<void> _handleSendOtp() async {
     if (_emailController.text.isEmpty) return;
-    setState(() => _isLoading = true);
-    try {
-      await http.post(
-        Uri.parse('${ApiConstants.baseUrl}${ApiConstants.forgotPassword}'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': _emailController.text.trim()}),
-      );
-      if (!mounted) return;
-      setState(() {
-        _isOtpSent = true;
-        _isLoading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to send code. Try again.')),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Password reset not yet available.')),
+    );
   }
 
   Future<void> _handleVerifyOtp() async {
-    final otp = _otpControllers.map((e) => e.text).join();
-    if (otp.length < 4) return;
-    setState(() => _isLoading = true);
-    try {
-      await http.post(
-        Uri.parse('${ApiConstants.baseUrl}${ApiConstants.verifyOtp}'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': _emailController.text.trim(),
-          'otp': otp,
-        }),
-      );
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('OTP Verified! Password reset link sent.')),
-      );
-      Navigator.pop(context);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Verification failed. Try again.')),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('OTP verification not yet available.')),
+    );
   }
 
   @override
